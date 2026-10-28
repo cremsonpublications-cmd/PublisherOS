@@ -1,0 +1,15 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies first for layer caching
+COPY package*.json ./
+RUN npm install
+
+# Copy source (volume mount overrides in dev)
+COPY . .
+
+EXPOSE 5173
+
+# host 0.0.0.0 is set in vite.config.ts — needed for Docker port forwarding
+CMD ["npm", "run", "dev"]

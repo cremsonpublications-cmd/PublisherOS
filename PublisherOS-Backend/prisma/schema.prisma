@@ -1,0 +1,163 @@
+// PublisherOS — Prisma Schema
+// Phase 2 (refactored): Authentication, publisher-centric multi-tenancy, and audit events.
+//
+// Commands:
+//   Generate client:    npm run db:generate  (or: npx prisma generate)
+//   Create migration:   npm run db:migrate:dev -- --name <description>
+//   Apply migrations:   npm run db:migrate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum PublisherStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum SystemRole {
+  SUPER_ADMIN
+}
+
+enum PublisherRole {
+  PUBLISHER_OWNER
+  PUBLISHER_STAFF
+}
+
+// ── User ──────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String        @id @default(cuid())
+  name            String
+  /// Normalized (lowercased + trimmed) email — enforced unique at DB level.
+  email           String        @unique
+  passwordHash    String
+  status          AccountStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt DateTime?
+  /// Platform-level role — only SUPER_ADMIN; null for normal users.
+  /// Must be granted through a secure admin CLI/seed, never via a public endpoint.
+  systemRole      SystemRole?
+  publisherId     String?
+  publisherRole   PublisherRole?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  publisher          Publisher?          @relation(fields: [publisherId], references: [id])
+  sessions           Session[]
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  auditEvents        AuditEvent[]
+
+  @@index([email])
+}
+
+// ── Publisher ─────────────────────────────────────────────────────────────────
+
+model Publisher {
+  id          String          @id @default(cuid())
+  name        String
+  /// URL-safe slug, unique across all publishers.
+  slug        String          @unique
+  status      PublisherStatus @default(ACTIVE)
+  website     String?
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  users       User[]
+  auditEvents AuditEvent[]
+
+  @@index([slug])
+}
+
+
+// ── Session ───────────────────────────────────────────────────────────────────
+
+model Session {
+  id           String    @id @default(cuid())
+  userId       String
+  /// SHA-256 hash of the opaque session token stored in the cookie.
+  /// The raw token is never persisted.
+  tokenHash    String    @unique
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  lastActiveAt DateTime  @default(now())
+  /// Stored for audit purposes only — never used for authorization.
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+// ── Email verification ────────────────────────────────────────────────────────
+
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  /// SHA-256 hash of the verification token. Raw token is never stored.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ── Password reset ────────────────────────────────────────────────────────────
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  /// SHA-256 hash of the reset token. Raw token is never stored.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ── Audit events ──────────────────────────────────────────────────────────────
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  /// Nullable: events can be recorded before a user is known (e.g. failed login attempt).
+  userId      String?
+  publisherId String?
+  /// Machine-readable event type, e.g. "auth.login_success", "publisher.staff_invited".
+  event       String
+  /// Safe metadata — must never contain passwords, tokens, or secrets.
+  metadata    Json     @default("{}")
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  publisher Publisher? @relation(fields: [publisherId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([publisherId])
+  @@index([event])
+  @@index([createdAt])
+}

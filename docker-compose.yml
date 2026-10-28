@@ -1,0 +1,82 @@
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: publisheros
+      POSTGRES_PASSWORD: publisheros
+      POSTGRES_DB: publisheros
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U publisheros"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - publisheros
+    # No ports: section — PostgreSQL is not publicly exposed.
+    # Connect via DATABASE_URL from within the Docker network.
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    # Disable persistence for local dev (faster, no disk writes)
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - publisheros
+    # No ports: section — Redis is not publicly exposed.
+
+  # ── API ─────────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./PublisherOS-Backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Override DATABASE_URL and REDIS_URL to use internal Docker hostnames
+      DATABASE_URL: postgresql://publisheros:publisheros@postgres:5432/publisheros
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./PublisherOS-Backend:/app
+      - /app/node_modules
+    networks:
+      - publisheros
+
+  # ── Web ─────────────────────────────────────────────────────────────────────
+  web:
+    build:
+      context: ./PublisherOS-Frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    depends_on:
+      - api
+    volumes:
+      - ./PublisherOS-Frontend:/app
+      - /app/node_modules
+    networks:
+      - publisheros
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  publisheros:
+    driver: bridge
