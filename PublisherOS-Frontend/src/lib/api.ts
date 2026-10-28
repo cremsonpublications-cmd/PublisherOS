@@ -185,6 +185,12 @@ export const superAdminApi = {
       pageSize: number;
     }>(`/api/v1/super-admin/users?page=${page}`),
 
+  setPublisherDomain: (id: string, domain: string | null) =>
+    request<{ publisher: import('../types').Publisher }>(
+      `/api/v1/super-admin/publishers/${id}/domain`,
+      { method: 'PUT', body: JSON.stringify({ domain }) },
+    ),
+
   getAuditEvents: (page = 1) =>
     request<{
       events: Array<

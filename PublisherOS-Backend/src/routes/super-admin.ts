@@ -16,6 +16,7 @@ import {
   listUsers,
   listAuditEvents,
 } from '../services/superAdminService';
+import { setCustomDomain } from '../services/publisherService';
 
 export const superAdminRouter = Router();
 
@@ -31,6 +32,19 @@ const pageSchema = z.object({
 
 const setStatusSchema = z.object({
   status: z.enum(['ACTIVE', 'SUSPENDED']),
+});
+
+const setDomainSchema = z.object({
+  domain: z
+    .string()
+    .trim()
+    .min(4)
+    .max(253)
+    .regex(
+      /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i,
+      'Must be a valid domain name (e.g. apublisher.com)',
+    )
+    .nullable(),
 });
 
 // ── GET /api/v1/super-admin/stats ─────────────────────────────────────────────
@@ -65,6 +79,15 @@ superAdminRouter.patch(
     res.json({ publisher });
   },
 );
+
+// ── PUT /api/v1/super-admin/publishers/:id/domain ─────────────────────────────
+// Set or clear a publisher's custom domain. Pass domain: null to remove it.
+
+superAdminRouter.put('/publishers/:id/domain', async (req: Request, res: Response) => {
+  const { domain } = setDomainSchema.parse(req.body);
+  const publisher = await setCustomDomain(String(req.params.id), domain);
+  res.json({ publisher });
+});
 
 // ── GET /api/v1/super-admin/users ────────────────────────────────────────────
 

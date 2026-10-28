@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { superAdminApi } from '../../lib/api';
+import { superAdminApi, ApiRequestError } from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { Alert } from '../../components/ui/Alert';
+import { Input } from '../../components/ui/Input';
 import { Spinner } from '../../components/ui/Spinner';
 import type { PublisherStatus, PublisherRole, AccountStatus } from '../../types';
 
@@ -31,11 +32,29 @@ export function PublisherDetailPage() {
     enabled: !!id,
   });
 
+  const [domainInput, setDomainInput] = useState('');
+  const [domainError, setDomainError] = useState('');
+  const [domainSuccess, setDomainSuccess] = useState('');
+
   const setStatus = useMutation({
     mutationFn: (status: PublisherStatus) => superAdminApi.setPublisherStatus(id, status),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['super-admin', 'publisher', id] });
       qc.invalidateQueries({ queryKey: ['super-admin', 'publishers'] });
+    },
+  });
+
+  const setDomain = useMutation({
+    mutationFn: (domain: string | null) => superAdminApi.setPublisherDomain(id, domain),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['super-admin', 'publisher', id] });
+      setDomainInput('');
+      setDomainError('');
+      setDomainSuccess('Domain updated.');
+      setTimeout(() => setDomainSuccess(''), 3000);
+    },
+    onError: (err) => {
+      setDomainError(err instanceof ApiRequestError ? err.message : 'Failed to update domain');
     },
   });
 
@@ -100,6 +119,56 @@ export function PublisherDetailPage() {
             <p className="text-[13px] font-medium text-[hsl(var(--foreground))] truncate">{row.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Custom domain */}
+      <div className="mb-6 border border-[hsl(var(--border))] rounded-[8px] p-4">
+        <h2 className="text-[14px] font-semibold text-[hsl(var(--foreground))] mb-3">Custom Domain</h2>
+
+        {domainSuccess && <div className="mb-3"><Alert variant="success">{domainSuccess}</Alert></div>}
+        {domainError && <div className="mb-3"><Alert variant="error">{domainError}</Alert></div>}
+
+        {data.customDomain ? (
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div>
+              <p className="text-[13px] font-mono font-medium text-[hsl(var(--foreground))]">{data.customDomain}</p>
+              <p className="text-[11px] text-[hsl(var(--muted-foreground))] mt-0.5">
+                {data.customDomainVerifiedAt ? `Verified ${new Date(data.customDomainVerifiedAt).toLocaleDateString()}` : 'Pending DNS verification'}
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={setDomain.isPending}
+              onClick={() => setDomain.mutate(null)}
+            >
+              Remove
+            </Button>
+          </div>
+        ) : (
+          <p className="text-[13px] text-[hsl(var(--muted-foreground))] mb-3">No custom domain connected.</p>
+        )}
+
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setDomainError('');
+            setDomain.mutate(domainInput.trim());
+          }}
+        >
+          <Input
+            type="text"
+            placeholder="apublisher.com"
+            value={domainInput}
+            onChange={(e) => setDomainInput(e.target.value)}
+            disabled={setDomain.isPending}
+            className="flex-1 max-w-xs"
+          />
+          <Button type="submit" size="sm" disabled={!domainInput.trim() || setDomain.isPending}>
+            {setDomain.isPending ? 'Saving…' : data.customDomain ? 'Update' : 'Connect'}
+          </Button>
+        </form>
       </div>
 
       {/* Users table */}
