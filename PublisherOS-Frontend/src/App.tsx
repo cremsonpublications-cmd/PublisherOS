@@ -47,6 +47,11 @@ const PublisherSettingsPage = lazy(() =>
     default: m.PublisherSettingsPage,
   })),
 );
+const DomainSettingsPage = lazy(() =>
+  import('./pages/publisher/DomainSettingsPage').then((m) => ({
+    default: m.DomainSettingsPage,
+  })),
+);
 const TeamPage = lazy(() =>
   import('./pages/admin/TeamPage').then((m) => ({ default: m.TeamPage })),
 );
@@ -68,6 +73,16 @@ const PublishersListPage = lazy(() =>
 const PublisherDetailPage = lazy(() =>
   import('./pages/super-admin/PublisherDetailPage').then((m) => ({
     default: m.PublisherDetailPage,
+  })),
+);
+const UsersListPage = lazy(() =>
+  import('./pages/super-admin/UsersListPage').then((m) => ({
+    default: m.UsersListPage,
+  })),
+);
+const AuditLogPage = lazy(() =>
+  import('./pages/super-admin/AuditLogPage').then((m) => ({
+    default: m.AuditLogPage,
   })),
 );
 
@@ -130,6 +145,7 @@ export default function App() {
         >
           <Route path="/dashboard/settings" element={<PageSuspense><PublisherSettingsPage /></PageSuspense>} />
           <Route path="/dashboard/team" element={<PageSuspense><TeamPage /></PageSuspense>} />
+          <Route path="/dashboard/domain" element={<PageSuspense><DomainSettingsPage /></PageSuspense>} />
         </Route>
 
         {/* Super-admin routes */}
@@ -143,6 +159,8 @@ export default function App() {
           <Route path="/super-admin" element={<PageSuspense><SuperAdminDashboard /></PageSuspense>} />
           <Route path="/super-admin/publishers" element={<PageSuspense><PublishersListPage /></PageSuspense>} />
           <Route path="/super-admin/publishers/:id" element={<PageSuspense><PublisherDetailPage /></PageSuspense>} />
+          <Route path="/super-admin/users" element={<PageSuspense><UsersListPage /></PageSuspense>} />
+          <Route path="/super-admin/audit-log" element={<PageSuspense><AuditLogPage /></PageSuspense>} />
         </Route>
 
         {/* Fallback */}

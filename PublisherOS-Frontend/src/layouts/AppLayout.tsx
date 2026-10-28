@@ -46,6 +46,15 @@ function ProfileIcon() {
   );
 }
 
+function DomainIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <circle cx="7.5" cy="7.5" r="6" />
+      <path d="M7.5 1.5c-2 2-3 3.8-3 6s1 4 3 6M7.5 1.5c2 2 3 3.8 3 6s-1 4-3 6M1.5 7.5h12" />
+    </svg>
+  );
+}
+
 
 function LogoutIcon() {
   return (
@@ -111,6 +120,7 @@ export function AppLayout() {
     { to: '/dashboard', label: 'Overview', icon: OverviewIcon },
     { to: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
     { to: '/dashboard/team', label: 'Team', icon: TeamIcon },
+    { to: '/dashboard/domain', label: 'Domain', icon: DomainIcon },
   ] as const;
 
   const staffNavItems = [

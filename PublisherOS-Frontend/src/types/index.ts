@@ -25,6 +25,8 @@ export interface Publisher {
   status: PublisherStatus;
   website: string | null;
   description: string | null;
+  customDomain: string | null;
+  customDomainVerifiedAt: string | null;
   createdAt: string;
 }
 

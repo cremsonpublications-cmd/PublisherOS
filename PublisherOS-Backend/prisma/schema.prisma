@@ -74,6 +74,10 @@ model Publisher {
   status      PublisherStatus @default(ACTIVE)
   website     String?
   description String?
+  /// Custom domain connected by the publisher, e.g. "apublisher.com". Unique across all publishers.
+  customDomain          String?   @unique
+  /// Set when the custom domain has been verified (CNAME/DNS confirmed).
+  customDomainVerifiedAt DateTime?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
@@ -81,6 +85,7 @@ model Publisher {
   auditEvents AuditEvent[]
 
   @@index([slug])
+  @@index([customDomain])
 }
 
 

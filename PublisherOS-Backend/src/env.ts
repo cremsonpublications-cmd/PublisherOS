@@ -20,7 +20,11 @@ const envSchema = z.object({
   COOKIE_DOMAIN: z.string().default(''),
 
   // ── Application ────────────────────────────────────────────────────────────
-  APP_BASE_URL: z.string().default('http://localhost:5174'),
+  APP_BASE_URL: z.string().default('http://localhost:5173'),
+  /// The admin-only domain. Only requests from this host can access super-admin routes in production.
+  ADMIN_DOMAIN: z.string().default('publisheros.com'),
+  /// The root domain used for CORS and cookie scoping in production.
+  ROOT_DOMAIN: z.string().default('publisheros.com'),
 
   // ── Email ──────────────────────────────────────────────────────────────────
   SMTP_HOST: z.string().default(''),

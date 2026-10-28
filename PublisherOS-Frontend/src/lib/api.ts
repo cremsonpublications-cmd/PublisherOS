@@ -134,6 +134,17 @@ export const publisherApi = {
     request<{ message: string }>(`/api/v1/publishers/me/staff/${userId}`, {
       method: 'DELETE',
     }),
+
+  setCustomDomain: (domain: string) =>
+    request<{ publisher: import('../types').Publisher }>('/api/v1/publishers/me/custom-domain', {
+      method: 'PUT',
+      body: JSON.stringify({ domain }),
+    }),
+
+  removeCustomDomain: () =>
+    request<{ publisher: import('../types').Publisher }>('/api/v1/publishers/me/custom-domain', {
+      method: 'DELETE',
+    }),
 };
 
 // ── Super-admin endpoints ─────────────────────────────────────────────────────

@@ -25,6 +25,25 @@ function PublishersIcon() {
   );
 }
 
+function UsersIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <circle cx="5.5" cy="5" r="2.5" />
+      <path d="M1 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
+      <circle cx="11.5" cy="5" r="2" />
+      <path d="M11.5 9c1.5 0 2.5 1 2.5 2.5" />
+    </svg>
+  );
+}
+
+function AuditIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <rect x="2" y="1.5" width="11" height="12" rx="1" />
+      <path d="M5 5h5M5 7.5h5M5 10h3" />
+    </svg>
+  );
+}
 
 function LogoutIcon() {
   return (
@@ -76,6 +95,8 @@ function SidebarNavItem({
 const NAV_ITEMS = [
   { to: '/super-admin', label: 'Dashboard', icon: DashboardIcon },
   { to: '/super-admin/publishers', label: 'Publishers', icon: PublishersIcon },
+  { to: '/super-admin/users', label: 'Users', icon: UsersIcon },
+  { to: '/super-admin/audit-log', label: 'Audit Log', icon: AuditIcon },
 ] as const;
 
 // ── Main layout ───────────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@ import { logger } from './logger';
 import { requestIdMiddleware } from './middleware/requestId';
 import { errorHandler } from './middleware/errorHandler';
 import { csrfProtection } from './middleware/csrf';
+import { domainResolutionMiddleware } from './middleware/domainResolution';
 import { apiRouter } from './routes';
 import { openApiSpec } from './openapi';
 
@@ -38,6 +39,9 @@ export function createApp(): express.Application {
 
   // ── Cookie parsing ────────────────────────────────────────────────────────
   app.use(cookieParser());
+
+  // ── Domain resolution (Host → Publisher mapping) ─────────────────────────
+  app.use(domainResolutionMiddleware);
 
   // ── CSRF protection (Origin header validation) ────────────────────────────
   app.use('/api/v1', csrfProtection);

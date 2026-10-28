@@ -100,6 +100,34 @@ export async function createStaff(
   return staff;
 }
 
+// ── Custom domain ─────────────────────────────────────────────────────────────
+
+export async function setCustomDomain(publisherId: string, domain: string | null) {
+  if (domain !== null) {
+    const normalized = domain.toLowerCase().trim();
+
+    // Check uniqueness — another publisher may already own this domain
+    const existing = await prisma.publisher.findFirst({
+      where: { customDomain: normalized, NOT: { id: publisherId } },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new ConflictError('This domain is already in use by another publisher');
+    }
+
+    return prisma.publisher.update({
+      where: { id: publisherId },
+      data: { customDomain: normalized, customDomainVerifiedAt: null },
+    });
+  }
+
+  // null → clear the domain
+  return prisma.publisher.update({
+    where: { id: publisherId },
+    data: { customDomain: null, customDomainVerifiedAt: null },
+  });
+}
+
 export async function removeStaff(publisherId: string, targetUserId: string) {
   const user = await prisma.user.findFirst({
     where: {

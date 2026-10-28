@@ -15,6 +15,7 @@ import {
   getStaff,
   createStaff,
   removeStaff,
+  setCustomDomain,
 } from '../services/publisherService';
 
 export const publishersRouter = Router();
@@ -31,6 +32,19 @@ const createStaffSchema = z.object({
   name: z.string().trim().min(1).max(100),
   email: z.string().email().max(254),
   password: z.string().min(8).max(128),
+});
+
+const customDomainSchema = z.object({
+  // Basic domain validation — no scheme, no path, no port
+  domain: z
+    .string()
+    .trim()
+    .min(4)
+    .max(253)
+    .regex(
+      /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i,
+      'Must be a valid domain name (e.g. apublisher.com)',
+    ),
 });
 
 // ── GET /api/v1/publishers/me ─────────────────────────────────────────────────
@@ -92,5 +106,34 @@ publishersRouter.delete(
     const { user } = res.locals;
     await removeStaff(user.publisherId!, String(req.params.userId));
     res.json({ message: 'Staff member removed.' });
+  },
+);
+
+// ── PUT /api/v1/publishers/me/custom-domain ───────────────────────────────────
+// Set or update the publisher's custom domain. Clears verification status.
+
+publishersRouter.put(
+  '/me/custom-domain',
+  requireAuth,
+  requirePublisherOwner(),
+  async (req: Request, res: Response) => {
+    const { user } = res.locals;
+    const { domain } = customDomainSchema.parse(req.body);
+    const publisher = await setCustomDomain(user.publisherId!, domain);
+    res.json({ publisher });
+  },
+);
+
+// ── DELETE /api/v1/publishers/me/custom-domain ────────────────────────────────
+// Remove the publisher's custom domain.
+
+publishersRouter.delete(
+  '/me/custom-domain',
+  requireAuth,
+  requirePublisherOwner(),
+  async (_req: Request, res: Response) => {
+    const { user } = res.locals;
+    const publisher = await setCustomDomain(user.publisherId!, null);
+    res.json({ publisher });
   },
 );
