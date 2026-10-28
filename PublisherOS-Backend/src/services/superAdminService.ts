@@ -49,12 +49,22 @@ export async function getStats() {
 
 // ── Publishers ────────────────────────────────────────────────────────────────
 
-export async function listPublishers(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
+export async function listPublishers(page = 1, pageSize = DEFAULT_PAGE_SIZE, search?: string) {
   const skip = (page - 1) * pageSize;
+  const where = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { slug: { contains: search, mode: 'insensitive' as const } },
+          { customDomain: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }
+    : undefined;
 
   const [total, publishers] = await Promise.all([
-    prisma.publisher.count(),
+    prisma.publisher.count({ where }),
     prisma.publisher.findMany({
+      where,
       skip,
       take: pageSize,
       orderBy: { createdAt: 'desc' },

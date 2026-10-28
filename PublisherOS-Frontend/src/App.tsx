@@ -1,11 +1,15 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './providers/AuthProvider';
+import { Spinner } from './components/ui/Spinner';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthLayout } from './layouts/AuthLayout';
 import { AppLayout } from './layouts/AppLayout';
 import { SuperAdminLayout } from './layouts/SuperAdminLayout';
-import { Spinner } from './components/ui/Spinner';
+
+const PublicStorefrontPage = lazy(() =>
+  import('./pages/PublicStorefrontPage').then((m) => ({ default: m.PublicStorefrontPage })),
+);
 
 // Lazy-load route components to keep the initial bundle small
 const HomePage = lazy(() =>
@@ -51,6 +55,9 @@ const DomainSettingsPage = lazy(() =>
   import('./pages/publisher/DomainSettingsPage').then((m) => ({
     default: m.DomainSettingsPage,
   })),
+);
+const CustomersPage = lazy(() =>
+  import('./pages/publisher/CustomersPage').then((m) => ({ default: m.CustomersPage })),
 );
 const TeamPage = lazy(() =>
   import('./pages/admin/TeamPage').then((m) => ({ default: m.TeamPage })),
@@ -100,7 +107,19 @@ function PageSuspense({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Returns true when accessed via a publisher custom domain (not localhost/127.0.0.1)
+const isCustomDomain = window.location.hostname !== 'localhost'
+  && window.location.hostname !== '127.0.0.1';
+
 export default function App() {
+  if (isCustomDomain) {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><Spinner size={24} /></div>}>
+        <PublicStorefrontPage />
+      </Suspense>
+    );
+  }
+
   return (
     <AuthProvider>
       <Routes>
@@ -146,6 +165,7 @@ export default function App() {
           <Route path="/dashboard/settings" element={<PageSuspense><PublisherSettingsPage /></PageSuspense>} />
           <Route path="/dashboard/team" element={<PageSuspense><TeamPage /></PageSuspense>} />
           <Route path="/dashboard/domain" element={<PageSuspense><DomainSettingsPage /></PageSuspense>} />
+          <Route path="/dashboard/customers" element={<PageSuspense><CustomersPage /></PageSuspense>} />
         </Route>
 
         {/* Super-admin routes */}

@@ -58,6 +58,33 @@ async function request<T>(
   return res.json() as Promise<T>;
 }
 
+// ── Public endpoints (no auth, domain-resolved) ───────────────────────────────
+
+export const publicApi = {
+  getPublisherByDomain: () =>
+    request<{ publisher: import('../types').Publisher }>(
+      `/api/v1/public/publisher?domain=${encodeURIComponent(window.location.hostname)}`,
+    ),
+
+  register: (data: { name: string; email: string; password: string }) =>
+    request<{ user: import('../types').User }>(
+      `/api/v1/public/register?domain=${encodeURIComponent(window.location.hostname)}`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+
+  verifyEmail: (data: { email: string; otp: string }) =>
+    request<{ user: import('../types').User }>(
+      `/api/v1/public/verify-email?domain=${encodeURIComponent(window.location.hostname)}`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+
+  login: (data: { email: string; password: string }) =>
+    request<{ user: import('../types').User }>(
+      `/api/v1/public/login?domain=${encodeURIComponent(window.location.hostname)}`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+};
+
 // ── Auth endpoints ────────────────────────────────────────────────────────────
 
 export const authApi = {
@@ -115,7 +142,15 @@ export const publisherApi = {
   getMe: () =>
     request<{ publisher: import('../types').Publisher }>('/api/v1/publishers/me'),
 
-  updateMe: (data: { name?: string; website?: string | null; description?: string | null }) =>
+  updateMe: (data: {
+    name?: string;
+    website?: string | null;
+    description?: string | null;
+    logoUrl?: string | null;
+    brandColor?: string | null;
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+  }) =>
     request<{ publisher: import('../types').Publisher }>('/api/v1/publishers/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -135,6 +170,11 @@ export const publisherApi = {
       method: 'DELETE',
     }),
 
+  getCustomers: () =>
+    request<{ customers: Array<{ id: string; name: string; email: string; status: import('../types').AccountStatus; createdAt: string }> }>(
+      '/api/v1/publishers/me/customers',
+    ),
+
   setCustomDomain: (domain: string) =>
     request<{ publisher: import('../types').Publisher }>('/api/v1/publishers/me/custom-domain', {
       method: 'PUT',
@@ -153,13 +193,13 @@ export const superAdminApi = {
   getStats: () =>
     request<{ stats: import('../types').PlatformStats }>('/api/v1/super-admin/stats'),
 
-  getPublishers: (page = 1) =>
+  getPublishers: (page = 1, search?: string) =>
     request<{
       publishers: Array<import('../types').Publisher & { _count: { users: number } }>;
       total: number;
       page: number;
       pageSize: number;
-    }>(`/api/v1/super-admin/publishers?page=${page}`),
+    }>(`/api/v1/super-admin/publishers?page=${page}${search ? `&search=${encodeURIComponent(search)}` : ''}`),
 
   getPublisher: (id: string) =>
     request<{

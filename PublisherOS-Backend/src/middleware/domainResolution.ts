@@ -58,7 +58,13 @@ export async function domainResolutionMiddleware(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  const rawHost = (req.headers['x-forwarded-host'] as string | undefined) ?? req.hostname ?? '';
+  // Prefer explicit ?domain= query param (sent by frontend public API calls),
+  // then X-Forwarded-Host (set by reverse proxies), then fall back to req.hostname.
+  const rawHost =
+    (req.query['domain'] as string | undefined) ??
+    (req.headers['x-forwarded-host'] as string | undefined) ??
+    req.hostname ??
+    '';
   const host = stripPort(rawHost);
 
   res.locals.requestHost = host;

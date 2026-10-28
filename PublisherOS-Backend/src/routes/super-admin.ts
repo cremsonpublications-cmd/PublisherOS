@@ -30,6 +30,10 @@ const pageSchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+const publishersQuerySchema = pageSchema.extend({
+  search: z.string().trim().max(100).optional(),
+});
+
 const setStatusSchema = z.object({
   status: z.enum(['ACTIVE', 'SUSPENDED']),
 });
@@ -57,8 +61,8 @@ superAdminRouter.get('/stats', async (_req: Request, res: Response) => {
 // ── GET /api/v1/super-admin/publishers ───────────────────────────────────────
 
 superAdminRouter.get('/publishers', async (req: Request, res: Response) => {
-  const { page, pageSize } = pageSchema.parse(req.query);
-  const result = await listPublishers(page, pageSize);
+  const { page, pageSize, search } = publishersQuerySchema.parse(req.query);
+  const result = await listPublishers(page, pageSize, search || undefined);
   res.json(result);
 });
 

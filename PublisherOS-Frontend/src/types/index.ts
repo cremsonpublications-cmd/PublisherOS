@@ -27,6 +27,10 @@ export interface Publisher {
   description: string | null;
   customDomain: string | null;
   customDomainVerifiedAt: string | null;
+  logoUrl: string | null;
+  brandColor: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   createdAt: string;
 }
 

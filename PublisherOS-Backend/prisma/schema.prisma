@@ -35,6 +35,7 @@ enum SystemRole {
 enum PublisherRole {
   PUBLISHER_OWNER
   PUBLISHER_STAFF
+  PUBLISHER_CUSTOMER
 }
 
 // ── User ──────────────────────────────────────────────────────────────────────
@@ -78,6 +79,14 @@ model Publisher {
   customDomain          String?   @unique
   /// Set when the custom domain has been verified (CNAME/DNS confirmed).
   customDomainVerifiedAt DateTime?
+  /// Public logo URL (CDN or data URL), displayed on storefront and dashboard.
+  logoUrl      String?
+  /// Brand accent colour as a CSS hex string, e.g. "#1a73e8".
+  brandColor   String?
+  /// Public contact e-mail shown to readers.
+  contactEmail String?
+  /// Public contact phone shown to readers.
+  contactPhone String?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 

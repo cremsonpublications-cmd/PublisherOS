@@ -24,7 +24,15 @@ export async function getPublisher(publisherId: string) {
 
 export async function updatePublisher(
   publisherId: string,
-  input: { name?: string; website?: string | null; description?: string | null },
+  input: {
+    name?: string;
+    website?: string | null;
+    description?: string | null;
+    logoUrl?: string | null;
+    brandColor?: string | null;
+    contactEmail?: string | null;
+    contactPhone?: string | null;
+  },
 ) {
   const publisher = await prisma.publisher.update({
     where: { id: publisherId },
@@ -32,6 +40,10 @@ export async function updatePublisher(
       ...(input.name !== undefined && { name: input.name.trim() }),
       ...(input.website !== undefined && { website: input.website }),
       ...(input.description !== undefined && { description: input.description }),
+      ...(input.logoUrl !== undefined && { logoUrl: input.logoUrl }),
+      ...(input.brandColor !== undefined && { brandColor: input.brandColor }),
+      ...(input.contactEmail !== undefined && { contactEmail: input.contactEmail }),
+      ...(input.contactPhone !== undefined && { contactPhone: input.contactPhone }),
     },
   });
 

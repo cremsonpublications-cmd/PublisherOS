@@ -26,6 +26,15 @@ const updatePublisherSchema = z.object({
   name: z.string().trim().min(2).max(100).optional(),
   website: z.string().url().max(255).nullable().optional(),
   description: z.string().trim().max(500).nullable().optional(),
+  logoUrl: z.string().url().max(2048).nullable().optional(),
+  brandColor: z
+    .string()
+    .trim()
+    .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Must be a valid hex colour, e.g. #FF5733')
+    .nullable()
+    .optional(),
+  contactEmail: z.string().email().max(254).nullable().optional(),
+  contactPhone: z.string().trim().max(30).nullable().optional(),
 });
 
 const createStaffSchema = z.object({
@@ -106,6 +115,25 @@ publishersRouter.delete(
     const { user } = res.locals;
     await removeStaff(user.publisherId!, String(req.params.userId));
     res.json({ message: 'Staff member removed.' });
+  },
+);
+
+// ── GET /api/v1/publishers/me/customers ───────────────────────────────────────
+
+publishersRouter.get(
+  '/me/customers',
+  requireAuth,
+  requirePublisher(),
+  async (_req: Request, res: Response) => {
+    const { user } = res.locals;
+    const customers = await import('../db.js').then(({ prisma }) =>
+      prisma.user.findMany({
+        where: { publisherId: user.publisherId!, publisherRole: 'PUBLISHER_CUSTOMER' },
+        select: { id: true, name: true, email: true, status: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+    );
+    res.json({ customers });
   },
 );
 

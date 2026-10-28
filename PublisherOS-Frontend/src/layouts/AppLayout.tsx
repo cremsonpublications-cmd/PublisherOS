@@ -46,6 +46,15 @@ function ProfileIcon() {
   );
 }
 
+function CustomersIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+      <circle cx="7.5" cy="4.5" r="2.5" />
+      <path d="M2.5 13c0-2.8 2.2-5 5-5s5 2.2 5 5" />
+    </svg>
+  );
+}
+
 function DomainIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
@@ -118,6 +127,7 @@ export function AppLayout() {
 
   const ownerNavItems = [
     { to: '/dashboard', label: 'Overview', icon: OverviewIcon },
+    { to: '/dashboard/customers', label: 'Customers', icon: CustomersIcon },
     { to: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
     { to: '/dashboard/team', label: 'Team', icon: TeamIcon },
     { to: '/dashboard/domain', label: 'Domain', icon: DomainIcon },
